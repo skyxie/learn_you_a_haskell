@@ -33,12 +33,12 @@ _flipPrepend xs x = x:xs
 myReverse :: [a] -> [a]
 myReverse xs = foldl _flipPrepend [] xs
 
--- 6. palindrome
-_isPalindromeStep :: Eq a => Int -> [a] -> Bool
-_isPalindromeStep i xs = i > (floor ((fromIntegral (myLength xs)) / 2.0)) || (((elementAt xs (i + 1)) == (elementAt xs ((myLength xs) - i))) && (_isPalindromeStep (i + 1) xs))
+myReverse' :: [a] -> [a]
+myReverse' xs = (myLast xs):(myReverse (init xs))
 
+-- 6. palindrome
 isPalindrome :: Eq a => [a] -> Bool
-isPalindrome = _isPalindromeStep 0
+isPalindrome xs = take (floor ((fromIntegral (myLength xs)) / 2.0)) xs == take (floor ((fromIntegral (myLength xs)) / 2.0)) (reverse xs)
 
 -- 7. flatten
 data NestedList a = Elem a | List [NestedList a]
@@ -47,6 +47,11 @@ flatten :: NestedList a -> [a]
 flatten (Elem x) = [x]
 flatten (List []) = []
 flatten (List (x:xs)) = foldl (++) (flatten x) [flatten x' | x' <- xs]
+
+flatten' :: NestedList a -> [a]
+flatten' (Elem x) = [x]
+flatten' (List []) = []
+flatten' (List (x:xs)) = (flatten x) ++ (flatten (List xs))
 
 -- 8. Eliminate consecutive duplicates
 pushBack :: [a] -> a -> [a]
@@ -62,28 +67,28 @@ compress :: Eq a => [a] -> [a]
 compress [] = []
 compress xs = foldl _compressStep [] xs
 
--- 9. Group consecutive duplicates
-_packStep :: Eq a => [[a]] -> a -> [[a]]
-_packStep g x = if (head (myLast g)) == x
-                then pushBack (take ((myLength g) - 1) g) (x:(myLast g))
-                else pushBack g [x]
+compress' :: Eq a => [a] -> [a]
+compress' [] = []
+compress' (x:xs) = if x == head xs
+                   then compress' xs
+                   else x:(compress' xs)
 
-pack :: Eq a => [a] -> [[a]]
-pack [] = [[]]
-pack (x:[]) = [[x]]
-pack (x:xs) = foldl _packStep [[x]] xs
+-- 9. Group consecutive duplicates
+_packStep :: Eq a => [[a]] -> [a] -> [[a]]
+_packStep g [] = g
+_packStep g (x:xs) = if (head (head g)) == x
+                     then _packStep (x:(head g)):(tail g) xs
+                     else _packStep [x]:g xs
+
+pack = reverse . (_packStep [[]])
 
 -- 10. Length encoding
-_encodeStep :: Eq a => Integral i => [(i, a)] -> a -> [(i, a)]
-_encodeStep g x = if (snd (myLast g)) == x
-                  then pushBack (take ((myLength g) - 1) g) (((fst (myLast g)) + 1), (snd (myLast g)))
-                  else pushBack g (1, x)
+_encodeStep :: Eq a => Integral i => [(i, a)] -> [a] -> [(i, a)]
+_encodeStep g [] = g
+_encodeStep g (x:xs) = if (snd (head g)) == x
+                       then _encodeStep (((fst (head g)) + 1), x):(tail g) xs
+                       else _encodeStep (1, x) xs
 
-encode :: Eq a => Integral i => [a] -> [(i, a)]
-encode [] = []
-encode (x:[]) = [(1, x)]
-encode (x:xs) = foldl _encodeStep [(1, x)] xs
-
-
+encode = reverse . (_encodeStep [])
 
 
