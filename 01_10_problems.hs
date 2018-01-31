@@ -76,19 +76,23 @@ compress' (x:xs) = if x == head xs
 -- 9. Group consecutive duplicates
 _packStep :: Eq a => [[a]] -> [a] -> [[a]]
 _packStep g [] = g
+_packStep [] (x:xs) = _packStep [[x]] xs
 _packStep g (x:xs) = if (head (head g)) == x
-                     then _packStep (x:(head g)):(tail g) xs
-                     else _packStep [x]:g xs
+                     then _packStep ((x:(head g)):(tail g)) xs
+                     else _packStep ([x]:g) xs
 
-pack = reverse . (_packStep [[]])
+pack :: Eq a => [a] -> [[a]]
+pack xs = reverse (_packStep [] xs)
 
 -- 10. Length encoding
 _encodeStep :: Eq a => Integral i => [(i, a)] -> [a] -> [(i, a)]
 _encodeStep g [] = g
+_encodeStep [] (x:xs) = _encodeStep [(1, x)] xs
 _encodeStep g (x:xs) = if (snd (head g)) == x
-                       then _encodeStep (((fst (head g)) + 1), x):(tail g) xs
-                       else _encodeStep (1, x) xs
+                       then _encodeStep ((((fst (head g)) + 1), x):(tail g)) xs
+                       else _encodeStep ((1, x):g) xs
 
-encode = reverse . (_encodeStep [])
+encode :: Eq a => Integral i => [a] -> [(i, a)]
+encode xs = reverse (_encodeStep [] xs)
 
 
