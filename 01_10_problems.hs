@@ -1,6 +1,7 @@
---
 -- Solutions to 99 Questions: https://wiki.haskell.org/99_questions/1_to_10
---
+
+-- Needed for 9 and 10
+import ReplaceHead
 
 -- 1. Last (w/o using last)
 myLast :: [a] -> a
@@ -78,21 +79,24 @@ _packStep :: Eq a => [[a]] -> [a] -> [[a]]
 _packStep g [] = g
 _packStep [] (x:xs) = _packStep [[x]] xs
 _packStep g (x:xs) = if (head (head g)) == x
-                     then _packStep ((x:(head g)):(tail g)) xs
+                     then _packStep (replaceHead (x:) g) xs
                      else _packStep ([x]:g) xs
 
 pack :: Eq a => [a] -> [[a]]
 pack xs = reverse (_packStep [] xs)
 
 -- 10. Length encoding
-_encodeStep :: Eq a => Integral i => [(i, a)] -> [a] -> [(i, a)]
+_encodeInc ::  (Integral i) => (i, a) ->  (i, a)
+_encodeInc (i, x) = (i + 1, x)
+
+_encodeStep :: (Eq a, Integral i) => [(i, a)] -> [a] -> [(i, a)]
 _encodeStep g [] = g
 _encodeStep [] (x:xs) = _encodeStep [(1, x)] xs
 _encodeStep g (x:xs) = if (snd (head g)) == x
-                       then _encodeStep ((((fst (head g)) + 1), x):(tail g)) xs
+                       then _encodeStep (replaceHead _encodeInc g) xs
                        else _encodeStep ((1, x):g) xs
 
-encode :: Eq a => Integral i => [a] -> [(i, a)]
+encode :: (Eq a, Integral i) => [a] -> [(i, a)]
 encode xs = reverse (_encodeStep [] xs)
 
 
