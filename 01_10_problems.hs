@@ -28,11 +28,9 @@ myLength [] = 0
 myLength (x:xs) = 1 + myLength xs
 
 -- 5. reverse (w/o using reverse)
-_flipPrepend :: [a] -> a -> [a]
-_flipPrepend xs x = x:xs
-
 myReverse :: [a] -> [a]
-myReverse xs = foldl _flipPrepend [] xs
+myReverse xs = foldl flipPrepend [] xs
+  where flipPrepend xs x = x:xs
 
 myReverse' :: [a] -> [a]
 myReverse' xs = (myLast xs):(myReverse (init xs))
@@ -55,18 +53,15 @@ flatten' (List []) = []
 flatten' (List (x:xs)) = (flatten x) ++ (flatten (List xs))
 
 -- 8. Eliminate consecutive duplicates
-pushBack :: [a] -> a -> [a]
-pushBack xs x = reverse (x:(reverse xs))
-
-_compressStep :: Eq a => [a] -> a -> [a]
-_compressStep [] x = [x]
-_compressStep xs x = if myLast xs == x
-                     then xs
-                     else pushBack xs x
-
 compress :: Eq a => [a] -> [a]
 compress [] = []
-compress xs = foldl _compressStep [] xs
+compress xs = foldl step [] xs
+  where
+    pushBack xs x = reverse (x:(reverse xs))
+    step [] x = [x]
+    step xs x = if myLast xs == x
+                then xs
+                else pushBack xs x
 
 compress' :: Eq a => [a] -> [a]
 compress' [] = []
@@ -75,28 +70,29 @@ compress' (x:xs) = if x == head xs
                    else x:(compress' xs)
 
 -- 9. Group consecutive duplicates
-_packStep :: Eq a => [[a]] -> [a] -> [[a]]
-_packStep g [] = g
-_packStep [] (x:xs) = _packStep [[x]] xs
-_packStep g (x:xs) = if (head (head g)) == x
-                     then _packStep (replaceHead (x:) g) xs
-                     else _packStep ([x]:g) xs
-
 pack :: Eq a => [a] -> [[a]]
-pack xs = reverse (_packStep [] xs)
+pack xs = reverse (step [] xs)
+  where
+    step :: Eq a => [[a]] -> [a] -> [[a]]
+    step g [] = g
+    step [] (x:xs) = step [[x]] xs
+    step g (x:xs) = if (head (head g)) == x
+                    then step (replaceHead (x:) g) xs
+                    else step ([x]:g) xs
 
 -- 10. Length encoding
-_encodeInc ::  (Integral i) => (i, a) ->  (i, a)
-_encodeInc (i, x) = (i + 1, x)
-
-_encodeStep :: (Eq a, Integral i) => [(i, a)] -> [a] -> [(i, a)]
-_encodeStep g [] = g
-_encodeStep [] (x:xs) = _encodeStep [(1, x)] xs
-_encodeStep g (x:xs) = if (snd (head g)) == x
-                       then _encodeStep (replaceHead _encodeInc g) xs
-                       else _encodeStep ((1, x):g) xs
-
 encode :: (Eq a, Integral i) => [a] -> [(i, a)]
-encode xs = reverse (_encodeStep [] xs)
+encode xs = reverse (encodeInit [] xs)
+  where
+    inc ::  (Integral i) => (i, a) ->  (i, a)
+    inc (i, x) = (i + 1, x)
+
+    encodeInit :: (Eq a, Integral i) => [(i, a)] -> [a] -> [(i, a)]
+    encodeInit g [] = g
+    encodeInit [] (x:xs) = encodeInit [(1, x)] xs
+    encodeInit g (x:xs) = if (snd (head g)) == x
+                           then encodeInit (replaceHead inc g) xs
+                           else encodeInit ((1, x):g) xs
+
 
 
